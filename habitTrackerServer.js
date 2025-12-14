@@ -254,10 +254,7 @@ app.post("/forgot-password", async (req, res) => {
         console.log("updated db");
 
         const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            requireTLS: true,
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
@@ -283,7 +280,7 @@ app.post("/forgot-password", async (req, res) => {
 
     } catch (e) {
         console.error(e);
-        res.render("forgotPassword", { error: "Something went wrong." });
+        res.render("forgotPassword", { error: "Something went wrong. Note that nodemailer does not work with Render free tier." });
     }
 });
 

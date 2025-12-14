@@ -226,15 +226,19 @@ app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
 
     try {
+        console.log("Accessing collection!");
         const collection = database.collection("users");
+        console.log("Looking for user!");
         const user = await collection.findOne({ email: email });
         if (!user) {
             return res.render("forgotPassword", { message: "If that email exists, we sent you a reset link." });
         }
 
-        console.log("Found user!")
+        console.log("Found user!");
 
         const token = crypto.randomBytes(32).toString('hex');
+
+        console.log("Waiting to update db");
 
         await collection.updateOne(
             { email: email },
@@ -246,9 +250,12 @@ app.post("/forgot-password", async (req, res) => {
             }
         );
 
+        console.log("updated db");
+
+
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
-            port: 465,
+            port: 587,
             secure: true,
             auth: {
                 user: process.env.EMAIL_USER,
@@ -260,7 +267,7 @@ app.post("/forgot-password", async (req, res) => {
         const host = req.get('host');
         const resetLink = `${protocol}://${host}/reset-password/${token}`;
 
-        await transporter.sendMail({
+        transporter.sendMail({
             to: email,
             from: "noreply@habittracker.com",
             subject: "Password Reset",

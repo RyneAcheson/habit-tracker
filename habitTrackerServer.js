@@ -224,7 +224,7 @@ app.get("/forgot-password", (req, res) => {
 
 app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
-    print("Received this email" + email);
+    console.log("Received this email" + email);
 
     try {
         console.log("Accessing collection!");
@@ -256,7 +256,8 @@ app.post("/forgot-password", async (req, res) => {
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 587,
-            secure: true,
+            secure: false,
+            requireTLS: true,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
@@ -275,6 +276,8 @@ app.post("/forgot-password", async (req, res) => {
                    <p>Click this <a href="${resetLink}">link</a> to set a new password.</p>
                    <p>This link expires in 1 hour.</p>`
         });
+
+        console.log("sent email!")
 
         res.render("forgotPassword", { message: "Check your email for the reset link!" });
 

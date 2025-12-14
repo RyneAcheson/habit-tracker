@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const MongoStore = require('connect-mongo');
 const SALT_ROUNDS = 10;
 
 require("dotenv").config({
@@ -19,15 +20,19 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     rolling: true,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_CONNECTION_STRING,
+        collectionName: 'sessions'
+    }),
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        // secure: true,
+        secure: true,
         httpOnly: true,
     }
 }));
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const portNumber = 5001;
+const portNumber = process.env.PORT || 5001;
 console.log(`Web server started and running at http://localhost:${portNumber}`);
 const prompt = "Stop to shutdown the server: ";
 process.stdin.setEncoding("utf8");
@@ -530,7 +535,9 @@ app.post("/settings/update-basic", async (req, res) => {
 
 
 
-app.listen(portNumber);
+app.listen(portNumber, () => {
+    console.log(`Server running on port ${portNumber}`)
+});
 
 
 async function verifyZip(zipcode) {

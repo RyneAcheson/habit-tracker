@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Habit Tracker Settings Page</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <%- include("partials/userMenu") %>
+
+    <div class="settings">
+        <div class="settings-sidebar">
+            <h2>Settings</h2>
+            <nav>
+                <a href="/settings/general" class="sidebar-item <%= activeTab === 'general' ? 'active' : '' %>">
+                    <img src="/icons/gear.ico" alt="General" class="settings-icon"> General
+                </a>
+
+                <a href="/settings/security" class="sidebar-item <%= activeTab === 'security' ? 'active' : '' %>">
+                    <img src="/icons/security.ico" alt="Security" class="settings-icon"> Security
+                </a>
+
+                <a href="/settings/calendar" class="sidebar-item <%= activeTab === 'calendar' ? 'active' : '' %>">
+                    <img src="/icons/calendar.ico" alt="Calendar" class="settings-icon"> Calendar
+                </a>
+
+                <a href="/settings/wearables" class="sidebar-item <%= activeTab === 'wearables' ? 'active' : '' %>">
+                    <img src="/icons/wearable.ico" alt="Wearables" class="settings-icon"> Wearables
+                </a>
+            </nav>
+        </div>
+
+        <div class="settings-content">
+            <% if (activeTab === "general") { %>
+                <div class="settings-card">
+                    <h2>Profile Information</h2>
+                    <h3>Basic info</h3>
+                    <div class="setting-tile top" id="nameTile" onclick="openEdit('nameTile')">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-label">Name</span>
+                                <span class="tile-value">
+                                    <%= user.firstName %> <%= user.lastName %>
+                                </span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+
+                        <div class="tile-edit" onclick="event.stopPropagation()">
+                            <form action="/settings/update-basic" method="POST">
+                                <span class=tile-label>Name</span>
+
+                                <fieldset class="date-fieldset">
+                                        <legend>First Name</legend>
+                                        <input type="text" id="firstName" name="firstName" class="fieldset-input" value="<%= user.firstName %>" required>
+                                </fieldset>
+                                <fieldset class="date-fieldset">
+                                        <legend>Last Name</legend>
+                                        <input type="text" id="lastName" name="lastName" class="fieldset-input" value="<%= user.lastName %>" required>
+                                </fieldset>
+
+                                <div class="edit-actions">
+                                    <button type="button" class="btn-cancel" onclick="closeEdit('nameTile', event)">Cancel</button>
+                                    <button type="submit" class="btn-save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="setting-tile inner" id="birthdayTile" onclick="openEdit('birthdayTile')" data-birthday="<%= user.birthday || '' %>">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-label">Birthday</span>
+                                <span class="tile-value">
+                                    <%= user.birthday || 'Not set' %>
+                                </span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+
+                        <div class="tile-edit" onclick="event.stopPropagation()">
+                            <form action="/settings/update-basic" method="post">
+
+                                <input type="hidden" name="birthday" id="finalBirthday" value="<%= user.birthday || '' %>">
+
+                                <span class=tile-label>Birthday</span>
+
+                                <div id="dateTile">
+                                    <fieldset class="date-fieldset" style="flex: 2;">
+                                        <legend>Month</legend>
+                                        <select id="dobMonth" class="fieldset-input" required onchange="combineBirthday()">
+                                            <option value="" disabled selected>Select</option>
+                                            <option value="01">January</option>
+                                            <option value="02">February</option>
+                                            <option value="03">March</option>
+                                            <option value="04">April</option>
+                                            <option value="05">May</option>
+                                            <option value="06">June</option>
+                                            <option value="07">July</option>
+                                            <option value="08">August</option>
+                                            <option value="09">September</option>
+                                            <option value="10">October</option>
+                                            <option value="11">November</option>
+                                            <option value="12">December</option>
+                                        </select>
+                                    </fieldset>
+
+                                    <fieldset class="date-fieldset" style="flex: 1;">
+                                        <legend>Day</legend>
+                                        <input type="number" id="dobDay" class="fieldset-input" placeholder="1" min="1" max="31" required oninput="combineBirthday()">
+                                    </fieldset>
+
+                                    <fieldset class="date-fieldset" style="flex: 1">
+                                        <legend>Year</legend>
+                                        <input type="number" id="dobYear" class="fieldset-input" placeholder="2000" min="1900" max="2025" required oninput="combineBirthday()">
+                                    </fieldset>
+
+                                </div>
+                                <div class="edit-actions">
+                                    <button type="button" class="btn-cancel" onclick="closeEdit('birthdayTile', event)">Cancel</button>
+                                    <button type="submit" class="btn-save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="setting-tile inner" id="genderTile" onclick="openEdit('genderTile')">
+
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-label">Gender</span>
+                                <span class="tile-value">
+                                    <%= user.gender || 'Not set' %>
+                                </span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+
+                        <div class="tile-edit" onclick="event.stopPropagation()">
+                            <form action="/settings/update-basic" method="post">
+                                <input type="hidden" name="gender" id="finalGender" value="<%= user.gender || '' %>">
+                                <span class="tile-label">Gender</span>
+
+                                <div>
+                                    <label class="gender-option">
+                                        <input type="radio" name="genderSelect" value="Female" onclick="setGender('Female')" <%= user.gender === 'Female' ? 'checked' : '' %>>
+                                        <span>Female</span>
+                                    </label>
+
+                                    <label class="gender-option">
+                                        <input type="radio" name="genderSelect" value="Male" onclick="setGender('Male')" <%= user.gender === 'Male' ? 'checked' : '' %>>
+                                        <span>Male</span>
+                                    </label>
+
+                                    <label class="gender-option">
+                                        <input type="radio" name="genderSelect" value="Rather not say" onclick="setGender('Rather not say')" <%= user.gender === 'Rather not say' ? 'checked' : '' %>>
+                                        <span>Rather not say</span>
+                                    </label>
+
+                                    <label class="gender-option">
+                                        <input type="radio" name="genderSelect" id="otherRadio" onclick="focusOtherInput()" <%= (user.gender && user.gender !== 'Female' && user.gender !== 'Male' && user.gender !== 'Rather not say') ? 'checked' : '' %>>
+                                        <input type="text" id="otherInput" placeholder="Other" value="<%= (user.gender && user.gender !== 'Female' && user.gender !== 'Male' && user.gender !== 'Rather not say') ? user.gender : '' %>"
+                                            oninput="setGender(this.value)" onfocus="selectOtherRadio()">
+                                    </label>
+                                </div>
+                                <div class="edit-actions">
+                                    <button type="button" class="btn-cancel" onclick="closeEdit('genderTile', event)">Cancel</button>
+                                    <button type="submit" class="btn-save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="setting-tile bottom" id="zipcodeTile" onclick="openEdit('zipcodeTile')">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-label">Zipcode</span>
+                                <span class="tile-value">
+                                    <%= user.zipcode || 'Not set' %>
+                                </span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+
+                        <tile class="tile-edit" onclick="event.stopPropagation()">
+                            <form action="/settings/update-basic" method="post">
+                                <span class="tile-label" style="margin-bottom: 15px;">Zipcode</span>
+
+                                <fieldset class="date-fieldset">
+                                    <input type="number" id="zipcode" name="zipcode" value="<%= user.zipcode %>" placeholder="12345" minlength="5" maxlength="5" class="fieldset-input">
+                                </fieldset>
+                                <div class="edit-actions">
+                                    <button type="button" class="btn-cancel" onclick="closeEdit('zipcodeTile', event)">Cancel</button>
+                                    <button type="submit" class="btn-save">Save</button>
+                                </div>
+                            </form>
+                        </tile>
+                    </div>
+                    <br><br>
+
+                    <h3>Contact info (WIP)</h3>
+                    <div class="setting-tile top" id="emailTile">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-label">Email</span>
+                                <span class="tile-value">
+                                    <%= user.email || 'Not set' %>
+                                </span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+
+                    <div class="setting-tile bottom" id="phoneTile">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-label">Phone</span>
+                                <span class="tile-value">
+                                    <%= user.phoneNum || 'Not set' %>
+                                </span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+                    <br><br>
+
+                    <h3>Looking for something else? (WIP)</h3>
+                    <div class="setting-tile" id="feedbackTile">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-value" id="feedback">Send feedback</span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+            
+            <% if (activeTab === "security") { %>
+                <div class="settings-card">
+                    <h2>Security (Work in Progress)</h2>
+                    <h3>How you sign in</h3>
+                    <div class="setting-tile" id="passwordTile">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-value" id="password">Password</span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+                    <br><br>
+                    <h3>Account</h3>
+                    <div class="setting-tile" id="deleteAccountTile">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-value" id="deleteAccount">Delete account</span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+                    <br><br>
+                    <h3>Looking for something else? (WIP)</h3>
+                    <div class="setting-tile" id="feedbackTileSecurity">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-value" id="feedbackSecurity">Send feedback</span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+            <% if (activeTab === "calendar") { %>
+                <div class="settings-card">
+                    <h2>Calendar (Work in Progress)</h2>
+                    <h3>Preferences</h3>
+
+                    <div class="setting-tile" id="connectCalendarTile">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-value" id="connectCalendar">Connect calendar</span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+
+                    <br><br>
+
+                    <h3>Looking for something else? (WIP)</h3>
+                    <div class="setting-tile" id="feedbackTileCalendar">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-value" id="feedbackCalendar">Send feedback</span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+            <% if (activeTab === "wearables") { %>
+                <div class="settings-card">
+                    <h2>Wearables (Work in Progress)</h2>
+                    <h3>Preferences</h3>
+                    <div class="setting-tile" id="wearableTile">
+                        <div class="tile-view">
+                            <div>
+                                <span class="tile-label">Connect Wearable</span>
+                                <span class="tile-value">
+                                    <%= user.wearable || 'Not set' %>
+                                </span>
+                            </div>
+                            <div class="tile-arrow">›</div>
+                        </div>
+                    </div>
+                    <br><br>
+                </div>
+            <% } %>
+
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+
+
+</html>

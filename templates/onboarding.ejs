@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Habit Tracker New User Onboarding</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div id="form-container">
+        <h1>Help us learn more about you</h1>
+        <form action="/onboarding" method="post">
+            First Name<br><input type="text" id="firstName" name="firstName" placeholder="First Name" class="input-val" required><br>
+            Last Name<br><input type="text" id="lastName" name="lastName" placeholder="Last Name" class="input-val" required><br>
+            Zipcode<br><input type="number" id="zipcode" name="zipcode" placeholder="Zipcode (e.g. 90210)" minlength="5", maxlength="5" class="input-val" required><br>
+            Primary Wearable
+            <select id="wearable" name="wearable" required class="input-val">
+                <option value="" disabled selected>Select your primary wearable</option>
+                <option value="apple_watch">Apple Watch</option>
+                <option value="fitbit">Fitbit</option>
+                <option value="garmin">Garmin</option>
+                <option value="oura">Oura Ring</option>
+                <option value="whoop">Whoop</option>
+                <option value="none">I don't use a wearable</option>
+            </select>
+            <input type="checkbox" name="emailConsent" id="emailConsent" checked> I would like to receive email updates from my Habit Tracker
+            <input type="submit" class="btn" value="Complete Onboarding!"><br><br>
+        </form>
+        <% if (locals.error) { %>
+            <div class="alert-error">
+                <%= error %>
+            </div>
+        <% } %>
+    </div>
+
+</body>
+
+</html>

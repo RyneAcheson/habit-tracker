@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Habit Tracker Create Account</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div id="form-container">
+        <h1>Create your account</h1><br>
+        <form action="/createAccount" method="post">
+            Email<br><input type="email" id="email" name="email" placeholder="Enter your email" class="input-val" required><br>
+            Password<br><input type="password" id="password" name="password" placeholder="Enter your password" minlength="8" class="input-val" required>
+            <input type="submit" class="btn" value="Create Account">
+        </form>
+
+        <p class="center-text">Already have an account?</p>
+        <a href="/login" class="a-btn">Sign in to existing account</a>
+    </div>
+</body>
+</html>

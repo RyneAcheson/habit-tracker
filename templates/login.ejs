@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Habit Tracker Login</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div id="form-container">
+        <h1>Sign in to your account</h1><br>
+        <form action="/login" method="post">
+            Email<br><input type="email" id="email" name="email" placeholder="Enter your email" class="input-val" required><br>
+            Password<br><input type="password" id="password" name="password" placeholder="Enter your password" class="input-val" required>
+            <input type="submit" class="btn" value="Sign in">
+        </form>
+
+        <p class="center-text">New to Habit Tracker?</p>
+        <a href="/createAccount" class="a-btn">Create an account</a>
+        <a href="/forgot-password"><p class="center-text">Forgot your password?</p>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Habit Tracker Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <%- include ("partials/userMenu") %>
+
+    <div class="dashboard-container">
+
+        <div id="form-container">
+            <h1><%= greeting %>, <%= user.firstName %>!</h1>
+
+            <p class="center-text">Ready to track your habits today?</p>
+
+            <p class="center-text"><%- weather %></p>
+
+            <p class="center-text">Have a great day!</p>
+        </div>
+
+        <div class="widgets-grid">
+            <div class="widget-card weather-widget">
+                <div class="widget-header">
+                    <h3>Weather</h3>
+                    <span>Potomac, MD</span>
+                </div>
+
+                <div class="weather-content">
+
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+
+</html>
+

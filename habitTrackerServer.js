@@ -224,6 +224,7 @@ app.get("/forgot-password", (req, res) => {
 
 app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
+    print("Received this email" + email);
 
     try {
         console.log("Accessing collection!");
@@ -252,7 +253,6 @@ app.post("/forgot-password", async (req, res) => {
 
         console.log("updated db");
 
-
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 587,
@@ -267,7 +267,7 @@ app.post("/forgot-password", async (req, res) => {
         const host = req.get('host');
         const resetLink = `${protocol}://${host}/reset-password/${token}`;
 
-        transporter.sendMail({
+        await transporter.sendMail({
             to: email,
             from: "noreply@habittracker.com",
             subject: "Password Reset",

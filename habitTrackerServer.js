@@ -396,6 +396,10 @@ app.get("/dashboard", async (req, res) => {
             return res.redirect("/login");
         }
 
+        if (user.onboarded !== true) {
+            return res.redirect("/onboarding");
+        }
+
         const hour = new Date().getHours();
         let greeting = "Good morning";
         if (hour >= 12) greeting = "Good afternoon";
@@ -485,6 +489,10 @@ app.get("/settings/:type", async (req, res) => {
 
         if (!user) {
             return res.redirect("/login");
+        }
+
+        if (user.onboarded !== true) {
+            return res.redirect("/onboarding");
         }
         
         res.render("settings", { user: user, activeTab: tabType });

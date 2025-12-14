@@ -16,22 +16,6 @@ require("dotenv").config({
     path: path.resolve(__dirname, ".env"),
 });
 
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    rolling: true,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGO_CONNECTION_STRING,
-        collectionName: 'sessions'
-    }),
-    cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-        secure: true,
-        httpOnly: true,
-    }
-}));
-
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const portNumber = process.env.PORT || 5001;
 console.log(`Web server started and running at http://localhost:${portNumber}`);
@@ -55,6 +39,41 @@ app.set("views", path.resolve(__dirname, "templates"));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({extended:false}));
 
+let database;
+async function startServer() {
+    const uri = process.env.MONGO_CONNECTION_STRING;
+    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
+    try {
+        await client.connect();
+        database = client.db("HABITTRACKERDB");
+        console.log("Connected to MongoDB");
+
+        app.listen(portNumber, () => {
+            console.log(`Server running on port ${portNumber}`);
+        });
+    } catch (e) {
+        console.error("Failed to connect to MongoDB:", e);
+        process.exit(1);
+    }
+}
+startServer();
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_CONNECTION_STRING,
+        collectionName: 'sessions'
+    }),
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        secure: process.env.IS_LOCAL === "true",
+        httpOnly: true,
+    }
+}));
+
 app.get("/", (req, res) => {
     res.redirect("dashboard");
 });
@@ -66,15 +85,8 @@ app.get("/login", (req, res) => {
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const uri = process.env.MONGO_CONNECTION_STRING;
-    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
-
     try {
-        await client.connect();
-        const database = client.db(databaseName);
-        const collection = database.collection(collectionName);
+        const collection = database.collection("users");
 
         const user = await collection.findOne({ email: email});
 
@@ -89,17 +101,18 @@ app.post("/login", async (req, res) => {
         }
 
         req.session.userId = user._id;
+        req.session.save((err) => {
+            if (err) console.error(err);
+            if (user.onboarded === true) {
+                res.redirect("/dashboard");
+            } else {
+                res.redirect("/onboarding");
+            }
+        });
 
-        if (user.onboarded === true) {
-            res.redirect("/dashboard");
-        } else {
-            res.redirect("/onboarding");
-        }
     } catch (e) {
         console.error(e);
         res.render("login", { error: "Unexpected login error occured."});
-    } finally {
-        await client.close();
     }
 });
 
@@ -110,15 +123,8 @@ app.get("/createAccount", (req, res) => {
 app.post("/createAccount", async (req, res) => {
     const { email, password } = req.body;
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const uri = process.env.MONGO_CONNECTION_STRING;
-    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
-
     try {
-        await client.connect();
-        const database = client.db(databaseName);
-        const collection = database.collection(collectionName);
+        const collection = database.collection("users");
 
         let filter = { email: email };
         const userExists = await collection.findOne(filter);
@@ -134,12 +140,12 @@ app.post("/createAccount", async (req, res) => {
         console.log(`Inserted User ${email}, User ID: ${result.insertedId}`);
 
         req.session.userId = result.insertedId;
-        res.redirect("/onboarding");
+        req.session.save(() => {
+            res.redirect("/onboarding");
+        });
     } catch(e) {
         console.error(e);
         res.render("createAccount", { error: e.message });
-    } finally {
-        await client.close();
     }
 });
 
@@ -151,18 +157,8 @@ app.get("/onboarding", async (req, res) => {
         return res.redirect("/login");
     }
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const uri = process.env.MONGO_CONNECTION_STRING;
-    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
-
     try {
-        await client.connect();
-        const database = client.db(databaseName);
-        const collection = database.collection(collectionName);
-
-        console.log(req.session.userId);
-
+        const collection = database.collection("users");
         const user = await collection.findOne({ _id: new ObjectId(req.session.userId) });
 
         if (user) {
@@ -177,8 +173,6 @@ app.get("/onboarding", async (req, res) => {
         res.render("onboarding");
     } catch (e) {
         console.error("Error checking onboarding status: " + err);
-    } finally {
-        await client.close();
     }
 });
 
@@ -199,15 +193,8 @@ app.post("/onboarding", async (req, res) => {
         return res.render("onboarding", { error: "Unable to verify zipcode at this time." });
     }
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const uri = process.env.MONGO_CONNECTION_STRING;
-    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
-
     try {
-        await client.connect();
-        const database = client.db(databaseName);
-        const collection = database.collection(collectionName);
+        const collection = database.collection("users");
 
         const filter = { _id: new ObjectId(req.session.userId) };
         const toUpdate = {
@@ -228,8 +215,6 @@ app.post("/onboarding", async (req, res) => {
     } catch (e) {
         console.error(e);
         res.render("onboarding", { error: "An error occurred while saving your data." });
-    } finally {
-        await client.close();
     }
 });
 
@@ -240,15 +225,8 @@ app.get("/forgot-password", (req, res) => {
 app.post("/forgot-password", async (req, res) => {
     const { email } = req.body;
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const client = new MongoClient(process.env.MONGO_CONNECTION_STRING);
-
     try {
-        await client.connect();
-        const db = client.db(databaseName);
-        const collection = db.collection(collectionName);
-
+        const collection = database.collection("users");
         const user = await collection.findOne({ email: email });
         if (!user) {
             return res.render("forgotPassword", { message: "If that email exists, we sent you a reset link." });
@@ -294,23 +272,14 @@ app.post("/forgot-password", async (req, res) => {
     } catch (e) {
         console.error(e);
         res.render("forgotPassword", { error: "Something went wrong." });
-    } finally {
-        await client.close();
     }
 });
 
 app.get("/reset-password/:token", async (req, res) => {
     const token = req.params.token;
-    
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const client = new MongoClient(process.env.MONGO_CONNECTION_STRING);
 
     try {
-        await client.connect();
-        const db = client.db(databaseName);
-        const collection = db.collection(collectionName);
-
+        const collection = database.collection("users");
         const user = await collection.findOne({ 
             resetToken: token, 
             resetTokenExpiration: { $gt: Date.now() } 
@@ -323,15 +292,12 @@ app.get("/reset-password/:token", async (req, res) => {
         res.render("resetPassword", { token: token });
     } catch (e) {
         console.error(e);
-    } finally {
-        await client.close();
     }
 });
 
 app.post("/reset-password", async (req, res) => {
     const { token, newPassword, confirmPassword } = req.body;
 
-    console.log(newPassword, confirmPassword)
     if (newPassword !== confirmPassword) {
         return res.render("resetPassword", {
             token: token,
@@ -339,14 +305,8 @@ app.post("/reset-password", async (req, res) => {
         });
     }
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const client = new MongoClient(process.env.MONGO_CONNECTION_STRING);
-
     try {
-        await client.connect();
-        const db = client.db(databaseName);
-        const collection = db.collection(collectionName);
+        const collection = database.collection("users");
 
         const filter = { resetToken: token, resetTokenExpiration: { $gt: Date.now() } };
         const user = await collection.findOne(filter);
@@ -370,9 +330,7 @@ app.post("/reset-password", async (req, res) => {
     } catch (e) {
         console.error(e);
         res.render("forgotPassword", { error: "Something went wrong. "});
-    } finally {
-        await client.close();
-    }
+    } 
 });
 
 app.get("/reset-success", (req, res) => {
@@ -384,16 +342,8 @@ app.get("/dashboard", async (req, res) => {
         return res.redirect("/login");
     }
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const uri = process.env.MONGO_CONNECTION_STRING;
-    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
-
     try {
-        await client.connect();
-        const database = client.db(databaseName);
-        const collection = database.collection(collectionName);
-
+        const collection = database.collection("users");
         const user = await collection.findOne({ _id: new ObjectId(req.session.userId) });
 
         if (!user) {
@@ -411,7 +361,6 @@ app.get("/dashboard", async (req, res) => {
 
         let weatherData = {location: "N/A", temp: 0, condition: "Sunny", high: 0, low: 0};
 
-        // Change back to if (user.latitude && user.longitude)
         if (user.latitude && user.longitude) {
             try {
                 const apiKey = process.env.WEATHER_API_KEY;
@@ -448,9 +397,7 @@ app.get("/dashboard", async (req, res) => {
     } catch (e) {
         console.error(e);
         res.status(500).send("Server Error");
-    } finally {
-        await client.close();
-    }
+    } 
 });
 
 app.get("/logout", (req, res) => {
@@ -480,15 +427,8 @@ app.get("/settings/:type", async (req, res) => {
         return res.redirect("/settings/general");
     }
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const uri = process.env.MONGO_CONNECTION_STRING;
-    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
-
     try {
-        await client.connect();
-        const database = client.db(databaseName);
-        const collection = database.collection(collectionName);
+        const collection = database.collection("users");
         const user = await collection.findOne({ _id: new ObjectId(req.session.userId) });
 
         if (!user) {
@@ -503,9 +443,7 @@ app.get("/settings/:type", async (req, res) => {
     } catch (e) {
         console.error("Error loading settings: " + e);
         res.redirect("/dashboard");
-    } finally {
-        await client.close();
-    } 
+    }
 });
 
 app.post("/settings/update-basic", async (req, res) => {
@@ -515,15 +453,8 @@ app.post("/settings/update-basic", async (req, res) => {
 
     const { firstName, lastName, birthday, gender } = req.body;
 
-    const databaseName = "HABITTRACKERDB";
-    const collectionName = "users";
-    const uri = process.env.MONGO_CONNECTION_STRING;
-    const client = new MongoClient(uri, { serverApi: ServerApiVersion.v1 });
-
     try {
-        await client.connect();
-        const database = client.db(databaseName);
-        const collection = database.collection(collectionName);
+        const collection = database.collection("users");
 
         const updates = {};
         if (firstName) updates.firstName = firstName;
@@ -540,18 +471,8 @@ app.post("/settings/update-basic", async (req, res) => {
     } catch (e) {
         console.error("Error updating basic info: " + e);
         res.redirect("/settings/general");
-    } finally {
-        await client.close();
     }
-
 })
-
-
-
-app.listen(portNumber, () => {
-    console.log(`Server running on port ${portNumber}`)
-});
-
 
 async function verifyZip(zipcode) {
     const API_KEY = process.env.ZIP_VERIFICATION_KEY;

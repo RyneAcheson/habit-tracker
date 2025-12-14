@@ -27,7 +27,7 @@ app.use(session({
     }),
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        secure: true,
+        // secure: true,
         httpOnly: true,
     }
 }));
@@ -254,6 +254,8 @@ app.post("/forgot-password", async (req, res) => {
             return res.render("forgotPassword", { message: "If that email exists, we sent you a reset link." });
         }
 
+        console.log("Found user!")
+
         const token = crypto.randomBytes(32).toString('hex');
 
         await collection.updateOne(
@@ -274,7 +276,9 @@ app.post("/forgot-password", async (req, res) => {
             }
         });
 
-        const resetLink = `http://localhost:5001/reset-password/${token}`;
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const resetLink = `${protocol}://${host}/reset-password/${token}`;
 
         await transporter.sendMail({
             to: email,
@@ -372,7 +376,7 @@ app.post("/reset-password", async (req, res) => {
 });
 
 app.get("/reset-success", (req, res) => {
-    app.render("resetSuccess")
+    res.render("resetSuccess")
 });
 
 app.get("/dashboard", async (req, res) => {

@@ -50,7 +50,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({extended:false}));
 
 app.get("/", (req, res) => {
-    res.render("index");
+    res.redirect("dashboard");
 });
 
 app.get("/login", (req, res) => {
@@ -391,14 +391,14 @@ app.get("/dashboard", async (req, res) => {
         }
 
         const hour = new Date().getHours();
-        let greeting = "Good Morning";
-        if (hour >= 12) greeting = "Good Afternoon";
-        if (hour >= 18) greeting = "Good Evening";
+        let greeting = "Good morning";
+        if (hour >= 12) greeting = "Good afternoon";
+        if (hour >= 18) greeting = "Good evening";
 
-        let weatherMessage = "Weather data currently unavailable.";
+        let weatherData = {location: "N/A", temp: 0, condition: "Sunny", high: 0, low: 0};
 
         // Change back to if (user.latitude && user.longitude)
-        if (false) {
+        if (user.latitude && user.longitude) {
             try {
                 const apiKey = process.env.WEATHER_API_KEY;
                 const url = `https://api.openweathermap.org/data/2.5/weather?lat=${user.latitude}&lon=${user.longitude}&units=imperial&appid=${apiKey}`;
@@ -407,9 +407,14 @@ app.get("/dashboard", async (req, res) => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    weatherMessage = `The current weather in <strong>${data.name}</strong> is 
-                    <strong>${data.main.temp}°F</strong> (feels like <strong>${data.main.feels_like}°F</strong>).`
-                    console.log(data);
+                    weatherData.location = data.name;
+                    weatherData.temp = Math.round(data.main.temp);
+                    weatherData.high = Math.round(data.main.temp_max);
+                    weatherData.low = Math.round(data.main.temp_min);
+                    if (data.weather && data.weather.length > 0) {
+                        const desc = data.weather[0].description
+                        weatherData.condition = desc.charAt(0).toUpperCase() + desc.slice(1);
+                    }
                 } else {
                     console.error("Weather API Error:", data.message);
                 }
@@ -423,7 +428,7 @@ app.get("/dashboard", async (req, res) => {
         res.render("dashboard", {
             user: user,
             greeting: greeting,
-            weather: weatherMessage
+            weather: weatherData
         });
 
     } catch (e) {

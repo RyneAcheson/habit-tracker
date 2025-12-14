@@ -49,15 +49,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 const yearInput = document.getElementById("dobYear");
 
                 if (monthInput) {
-                    monthInput.value = parts[1];
+                    monthInput.value = parts[0];
                 }
 
                 if (yearInput) {
-                    yearInput.value = parts[0];
+                    yearInput.value = parts[2];
                 }
                 
                 if (dayInput) {
-                    dayInput.value = parts[2];
+                    dayInput.value = parts[1];
                 }
             }
         }

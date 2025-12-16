@@ -4,6 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const app = express();
+const Router = express.Router();
 app.set("trust proxy", 1);
 const bcrypt = require('bcrypt');
 const session = require('express-session');
@@ -69,10 +70,12 @@ app.use(session({
     }),
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        secure: process.env.IS_LOCAL === "true",
+        secure: process.env.IS_LOCAL !== "true",
         httpOnly: true,
     }
 }));
+
+app.use("/settings", Router);
 
 app.get("/", (req, res) => {
     res.redirect("dashboard");
@@ -420,11 +423,11 @@ app.get("/logout", (req, res) => {
     })
 });
 
-app.get("/settings", (req, res) => {
+Router.get("/", (req, res) => {
     res.redirect("/settings/general");
 });
 
-app.get("/settings/:type", async (req, res) => {
+Router.get("/:type", async (req, res) => {
     if (!req.session.userId) {
         return res.redirect("/login");
     }
@@ -455,7 +458,7 @@ app.get("/settings/:type", async (req, res) => {
     }
 });
 
-app.post("/settings/update-basic", async (req, res) => {
+Router.post("/update-basic", async (req, res) => {
     if (!req.session.userId) {
         return res.redirect("/login");
     }

@@ -7,8 +7,7 @@ App Description:
     Eventually the idea is that users would be able to connect their smart wearable device (Whoop, Oura Ring, Garmin Watch, Apple Watch, FitBit, etc.)
     and data visualizations would appear on their dashboard along with their daily, weekly, monthly, and yearly goals to keep them on track. 
 
-Youtube Video Link:
-
+Youtube Video Link: https://youtu.be/I7ZjOD0-7uQ
 
 APIs: 
     Zip Code Information API from METADAPI (https://www.metadapi.com/),
@@ -16,4 +15,4 @@ APIs:
 
 Contact Email: racheson@terpmail.umd.edu
 
-Deloyed App Link: 
+Deloyed App Link: https://habit-tracker-hxff.onrender.com
